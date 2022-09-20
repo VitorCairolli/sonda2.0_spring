@@ -6,11 +6,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/probe")
+@RequestMapping("/api/probes")
 public class ProbeController {
 
-    @Autowired
     private ProbeService service;
+
+    public ProbeController(ProbeService service){this.service = service;}
 
     @GetMapping("/{probeId}")
     public ResponseEntity<OutputProbeDTO> getProbe(@PathVariable Long probeId) {
@@ -19,14 +20,14 @@ public class ProbeController {
         return ResponseEntity.ok(OutputProbeDTO.from(probe.get()));
     }
 
-    @PostMapping("/create/{plateauId}")
-    public ResponseEntity<OutputProbeDTO> createProbe(@RequestBody InputProbeDTO inputProbeDTO, @PathVariable Long plateauId) {
-        var probe = service.create(inputProbeDTO.toEntity(), plateauId);
+    @PostMapping
+    public ResponseEntity<OutputProbeDTO> createProbe(@RequestBody InputProbeDTO inputProbeDTO) {
+        var probe = service.create(inputProbeDTO.toEntity(), inputProbeDTO.getPlateauId());
 
         return ResponseEntity.ok(OutputProbeDTO.from(probe));
     }
 
-    @PostMapping("/move/{probeId}")
+    @PostMapping("/{probeId}/move")
     public ResponseEntity<OutputProbeDTO> moveProbe(@RequestBody InputCommandDTO commandDTO, @PathVariable Long probeId) {
         var probe = service.move(commandDTO.command().toUpperCase(), probeId);
 
