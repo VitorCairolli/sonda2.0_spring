@@ -4,6 +4,8 @@ import com.elo7.probe_spring.services.ProbeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping("/api/probes")
 public class ProbeController {
@@ -33,7 +35,7 @@ public class ProbeController {
     }
 
     @PostMapping("/{probeId}/move")
-    public ResponseEntity<ProbeDTO> moveProbe(@RequestBody CommandDTO commandDTO, @PathVariable Long probeId) {
+    public ResponseEntity<ProbeDTO> moveProbe(@RequestBody @Valid CommandDTO commandDTO, @PathVariable Long probeId) {
         var probe = service.move(commandDTO.command().toUpperCase(), probeId);
 
         return ResponseEntity.ok(ProbeDTO.from(probe));

@@ -1,13 +1,10 @@
 package com.elo7.probe_spring.controllers;
 
-import javax.validation.Valid;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import javax.validation.constraints.Pattern;
 
-@Pattern(regexp = "\"(^[LMR]+)$\"gm\"", message = "Invalid command")
-public record CommandDTO(@Valid String command) {
+public record CommandDTO(@Pattern(regexp = "\"(^[LMR]+)$\"gm", message = "Invalid command") String command) {
 
-    public String command() {
-
-        return command;
-    }
+    @JsonCreator
+    public CommandDTO{}
 }

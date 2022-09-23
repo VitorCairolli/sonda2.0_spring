@@ -54,7 +54,7 @@ public class ProbeService {
         Probe probe = repository.findById(probeId)
                 .orElseThrow(() -> new InvalidProbeException("Probe not found"));
 
-        Plateau plateau = plateauService.findById(probe.getId())
+        Plateau plateau = plateauService.findById(probe.getPlateau().getId())
                 .orElseThrow(() -> new InvalidPlateauException("Plateau not found"));
 
         HashMap<Position, Probe> hashMap = probeListToHashmap(plateau.getProbes());
