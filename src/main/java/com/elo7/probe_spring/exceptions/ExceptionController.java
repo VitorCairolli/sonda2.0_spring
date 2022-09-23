@@ -10,16 +10,25 @@ public class ExceptionController {
 
     @ExceptionHandler(value = InvalidPlateauException.class)
     public ResponseEntity<Object> plateauException (InvalidPlateauException exception) {
-        return new ResponseEntity<>(exception.getBody(), HttpStatus.BAD_REQUEST);
+
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(value = InvalidProbeException.class)
     public ResponseEntity<Object> probeException (InvalidProbeException exception) {
-        return new ResponseEntity<>(exception.getBody(), HttpStatus.BAD_REQUEST);
+
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(value = InvalidCommandException.class)
-    public ResponseEntity<Object> commandException (InvalidCommandException exception) {
-        return new ResponseEntity<>(exception.getBody(), HttpStatus.BAD_REQUEST);
+    @ExceptionHandler(value = ProbeCollisionException.class)
+    public ResponseEntity<Object> probeCollisionException(ProbeCollisionException exception) {
+
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(value = ProbeOutOfPlateauException.class)
+    public ResponseEntity<Object> probeOutOfPlateauException(ProbeOutOfPlateauException exception) {
+
+        return new ResponseEntity<>(exception.getMessage(), HttpStatus.BAD_REQUEST);
     }
 }

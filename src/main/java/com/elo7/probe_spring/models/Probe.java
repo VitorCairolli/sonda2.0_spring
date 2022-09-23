@@ -9,15 +9,14 @@ import javax.persistence.*;
 public class Probe {
 
     @Id
-    @SequenceGenerator(name = "PROBE_SEQ")
-    @GeneratedValue(generator = "PROBE_SEQ")
+    @GeneratedValue
     private Long id;
 
     @OneToOne(cascade=CascadeType.ALL)
     @JoinColumn(name = "position_id")
     private Position position;
 
-    @Enumerated(EnumType.ORDINAL)
+    @Enumerated(EnumType.STRING)
     @Column(name="direction")
     private Direction direction;
 
@@ -28,35 +27,48 @@ public class Probe {
 
     Probe(){}
 
-    public Probe(Position position, Direction direction){
+    public Probe(Position position, Direction direction) {
+
         this.position = position;
         this.direction = direction;
     }
 
     public Long getId() {
+
         return id;
     }
 
-    @JsonIgnore
     public Plateau getPlateau() {
+
         return plateau;
     }
 
-    public void setPlateau(Plateau plateau) {this.plateau = plateau;}
+    public void setPlateau(Plateau plateau) {
 
-    public Direction getDirection() {return direction;}
+        this.plateau = plateau;
+    }
+
+    public Direction getDirection() {
+        return direction;
+    }
 
     public Position getPosition() {
+
         return position;
     }
 
-    public void setDirection(Direction direction) {this.direction = direction;}
+    public void setDirection(Direction direction) {
+
+        this.direction = direction;
+    }
 
     public void move() {
+
         direction.move(position);
     }
 
     public void turn(char side) {
+
         direction = direction.turn(side);
     }
 }

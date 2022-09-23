@@ -7,15 +7,14 @@ import javax.persistence.*;
 public class Position {
 
     @Id
-    @SequenceGenerator(name = "POSITION_SEQ")
-    @GeneratedValue(generator = "POSITION_SEQ")
+    @GeneratedValue
     private Long id;
 
     @Column(name = "x_coordinate")
-    private int x;
+    private Integer x;
 
     @Column(name = "y_coordinate")
-    private int y;
+    private Integer y;
 
     Position() {
     }
@@ -26,13 +25,26 @@ public class Position {
     }
 
     public Long getId() {
+
         return id;
     }
 
-    public int getX() {return this.x;}
-    public int getY() {return this.y;}
-    public void setX(int x) {this.x = x;}
-    public void setY(int y) {this.y = y;}
+    public int getX() {
+
+        return this.x;
+    }
+    public int getY() {
+
+        return this.y;
+    }
+    public void setX(int x) {
+
+        this.x = x;
+    }
+    public void setY(int y) {
+
+        this.y = y;
+    }
 
     @Override
     public boolean equals(Object o) {

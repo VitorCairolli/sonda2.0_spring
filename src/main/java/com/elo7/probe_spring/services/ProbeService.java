@@ -1,12 +1,13 @@
 package com.elo7.probe_spring.services;
 
-import com.elo7.probe_spring.exceptions.InvalidCommandException;
+import com.elo7.probe_spring.exceptions.InvalidPlateauException;
 import com.elo7.probe_spring.exceptions.InvalidProbeException;
+import com.elo7.probe_spring.exceptions.ProbeCollisionException;
+import com.elo7.probe_spring.exceptions.ProbeOutOfPlateauException;
 import com.elo7.probe_spring.models.Plateau;
 import com.elo7.probe_spring.models.Position;
 import com.elo7.probe_spring.models.Probe;
 import com.elo7.probe_spring.repositories.ProbeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -16,101 +17,72 @@ import java.util.Optional;
 @Service
 public class ProbeService {
 
-    @Autowired
-    private ProbeRepository repository;
-    @Autowired
-    PlateauService plateauService;
-    @Autowired
-    InvalidProbeException probeException;
-    @Autowired
-    InvalidCommandException commandException;
+    private final ProbeRepository repository;
+
+    private final PlateauService plateauService;
+
+    public ProbeService(ProbeRepository repository, PlateauService plateauService) {
+
+        this.repository = repository;
+        this.plateauService = plateauService;
+    }
 
     public Optional<Probe> findById(Long probeId) {
         Optional<Probe> probe = repository.findById(probeId);
-
-        if(probe.isEmpty()) {
-            probeException.setBody("Probe id invalid");
-            throw probeException;
-        }
 
         return probe;
     }
 
     public Probe create(Probe newProbe, Long plateauId) {
-        Optional<Plateau> plateau = plateauService.findById(plateauId);
+        Plateau plateau = plateauService.findById(plateauId)
+                .orElseThrow(() -> new InvalidPlateauException("Plateau not found"));
 
-        if(!isInside(newProbe.getPosition(), plateau.get())) {
-            probeException.setBody("Probe position is outside chosen plateau");
-            throw probeException;
-        }
+        if(!plateau.isInside(newProbe))
+            throw new InvalidProbeException("Probe coordinates are not inside plateau");
 
-        for (Probe probe:plateau.get().getProbeList()) {
+        for (Probe probe:plateau.getProbes()) {
             if(newProbe.getPosition().equals(probe.getPosition())) {
-                probeException.setBody("There's already a probe in this position");
-                throw probeException;
+                throw new InvalidProbeException("There is already a probe in this coordinates");
             }
         }
 
-        newProbe.setPlateau(plateau.get());
+        newProbe.setPlateau(plateau);
         return repository.save(newProbe);
     }
 
     public Probe move(String command, Long probeId) {
-        Optional<Probe> probe = repository.findById(probeId);
+        Probe probe = repository.findById(probeId)
+                .orElseThrow(() -> new InvalidProbeException("Probe not found"));
 
-        if(!commandIsValid(command)) {
-            commandException.setBody("Invalid command. Must contain only 'L'(left), 'R'(right) or 'M'(move)");
-            throw commandException;
-        }
+        Plateau plateau = plateauService.findById(probe.getId())
+                .orElseThrow(() -> new InvalidPlateauException("Plateau not found"));
 
-        Optional<Plateau> plateau = plateauService.findById(probe.get().getPlateau().getId());
+        HashMap<Position, Probe> hashMap = probeListToHashmap(plateau.getProbes());
 
-        HashMap<Probe, Position> hashMap = probeListToHashmap(plateau.get().getProbeList());
-
-        Probe dummy = new Probe(new Position(probe.get().getPosition().getX(), probe.get().getPosition().getY()), probe.get().getDirection());
+        Probe dummy = new Probe(new Position(probe.getPosition().getX(), probe.getPosition().getY()), probe.getDirection());
 
         for(int i = 0; i < command.length(); i++) {
             if(command.charAt(i) == 'M') {
                 dummy.move();
-                if (hashMap.containsValue(dummy.getPosition())) {
-                    commandException.setBody("Invalid command. This command will cause probe collision");
-                    throw commandException;
-                }
-                if (!isInside(dummy.getPosition(), plateau.get())) {
-                    commandException.setBody("Invalid command. This command will cause the probe to leave the plateau");
-                    throw commandException;
-                }
+                if (hashMap.containsKey(dummy.getPosition()))
+                    throw new ProbeCollisionException("Command causes probe to collide");
+
+                if (!plateau.isInside(dummy))
+                    throw new ProbeOutOfPlateauException("Command causes probe to leave plateau");
             }
             else dummy.turn(command.charAt(i));
         }
 
-        probe.get().getPosition().setX(dummy.getPosition().getX());
-        probe.get().getPosition().setY(dummy.getPosition().getY());
-        probe.get().setDirection(dummy.getDirection());
-        return repository.save(probe.get());
+        probe.getPosition().setX(dummy.getPosition().getX());
+        probe.getPosition().setY(dummy.getPosition().getY());
+        probe.setDirection(dummy.getDirection());
+        return repository.save(probe);
     }
 
-    private boolean isInside(Position position, Plateau plateau) {
-        return (position.getX() >= plateau.getPosition1().getX() &&
-                position.getY() >= plateau.getPosition1().getY() &&
-                position.getX() <= plateau.getPosition2().getX() &&
-                position.getY() <= plateau.getPosition2().getY());
-    }
-
-    private boolean commandIsValid(String command) {
-        for(int i = 0; i < command.length(); i++)
-            if (command.charAt(i) != 'L' &&
-            command.charAt(i) != 'R' &&
-            command.charAt(i) != 'M')
-                return false;
-
-        return true;
-    }
-
-    private HashMap probeListToHashmap(List<Probe> probeList) {
-        HashMap<Probe, Position> hashMap = new HashMap<>();
+    private HashMap<Position, Probe> probeListToHashmap(List<Probe> probeList) {
+        HashMap<Position, Probe> hashMap = new HashMap<>();
         for (Probe probe:probeList) {
-            hashMap.put(probe, probe.getPosition());
+            hashMap.put(probe.getPosition(), probe);
         }
 
         return hashMap;

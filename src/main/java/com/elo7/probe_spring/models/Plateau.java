@@ -12,36 +12,52 @@ public class Plateau {
     private Long id;
 
     @OneToOne(cascade=CascadeType.ALL)
-    @JoinColumn(name = "position_1_id")
-    private Position position1;
+    @JoinColumn(name = "minPosition_id")
+    private Position minPosition;
 
     @OneToOne(cascade=CascadeType.ALL)
-    @JoinColumn(name = "position_2_id")
-    private Position position2;
+    @JoinColumn(name = "maxPosition_id")
+    private Position maxPosition;
 
     @OneToMany(mappedBy = "plateau")
-    private List<Probe> probeList;
+    private List<Probe> probes;
 
     Plateau(){}
 
-    public Plateau(Position position1, Position position2){
-        this.position1 = position1;
-        this.position2 = position2;
-        probeList = new ArrayList<>() {
+    public Plateau(Position position){
+        this.minPosition = new Position(0,0);
+        this.maxPosition = position;
+        probes = new ArrayList<>() {
         };
     }
 
-    public Long getId(){return id;}
+    public Long getId(){
 
-    public Position getPosition1() {
-        return position1;
+        return id;
     }
 
-    public Position getPosition2() {
-        return position2;
+    public Position getMinPosition() {
+
+        return minPosition;
     }
 
-    public List<Probe> getProbeList(){return probeList;}
+    public Position getMaxPosition() {
+
+        return maxPosition;
+    }
+
+    public List<Probe> getProbes(){
+
+        return probes;
+    }
+
+    public boolean isInside(Probe probe) {
+
+        return (probe.getPosition().getX() >= getMinPosition().getX() &&
+                probe.getPosition().getY() >= getMinPosition().getY() &&
+                probe.getPosition().getX() <= getMaxPosition().getX() &&
+                probe.getPosition().getY() <= getMaxPosition().getY());
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -52,12 +68,12 @@ public class Plateau {
             return false;
 
         return (this.id.equals(plateau.id) &&
-                this.position1.equals(plateau.position1) &&
-                this.position2.equals(plateau.position2));
+                this.minPosition.equals(plateau.minPosition) &&
+                this.maxPosition.equals(plateau.maxPosition));
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(this.id, this.position1, this.position2);
+        return Objects.hash(this.id, this.minPosition, this.maxPosition);
     }
 }
