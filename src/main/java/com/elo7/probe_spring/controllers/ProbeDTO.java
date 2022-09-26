@@ -1,7 +1,6 @@
 package com.elo7.probe_spring.controllers;
 
 import com.elo7.probe_spring.models.Direction;
-import com.elo7.probe_spring.models.Position;
 import com.elo7.probe_spring.models.Probe;
 import com.fasterxml.jackson.annotation.JsonInclude;
 

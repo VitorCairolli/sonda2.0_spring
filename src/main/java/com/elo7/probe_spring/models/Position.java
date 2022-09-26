@@ -2,18 +2,11 @@ package com.elo7.probe_spring.models;
 
 import javax.persistence.*;
 
-@Entity
-@Table(name = "position")
+@Embeddable
 public class Position {
 
-    @Id
-    @GeneratedValue
-    private Long id;
-
-    @Column(name = "x_coordinate")
     private Integer x;
 
-    @Column(name = "y_coordinate")
     private Integer y;
 
     Position() {
@@ -22,11 +15,6 @@ public class Position {
     public Position(int x, int y) {
         this.x = x;
         this.y = y;
-    }
-
-    public Long getId() {
-
-        return id;
     }
 
     public int getX() {

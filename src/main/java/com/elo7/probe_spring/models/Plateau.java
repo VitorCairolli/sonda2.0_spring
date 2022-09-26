@@ -15,12 +15,18 @@ public class Plateau {
     @GeneratedValue
     private Long id;
 
-    @OneToOne(cascade=CascadeType.ALL)
-    @JoinColumn(name = "minPosition_id")
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "x", column = @Column(name = "min_x_coordinates")),
+            @AttributeOverride(name = "y", column = @Column(name = "min_y_coordinates")),
+    })
     private Position minPosition;
 
-    @OneToOne(cascade=CascadeType.ALL)
-    @JoinColumn(name = "maxPosition_id")
+    @Embedded
+    @AttributeOverrides({
+        @AttributeOverride(name = "x", column = @Column(name = "max_x_coordinates")),
+        @AttributeOverride(name = "y", column = @Column(name = "max_y_coordinates")),
+    })
     private Position maxPosition;
 
     @OneToMany(mappedBy = "plateau")

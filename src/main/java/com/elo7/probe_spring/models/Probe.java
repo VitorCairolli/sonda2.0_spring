@@ -13,8 +13,11 @@ public class Probe {
     @GeneratedValue
     private Long id;
 
-    @OneToOne(cascade=CascadeType.ALL)
-    @JoinColumn(name = "position_id")
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "x", column = @Column(name = "x_coordinates")),
+            @AttributeOverride(name = "y", column = @Column(name = "y_coordinates")),
+    })
     private Position position;
 
     @Enumerated(EnumType.STRING)

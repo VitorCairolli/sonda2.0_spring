@@ -7,8 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import javax.validation.constraints.Min;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record PositionDTO(Long id ,
-                          @Min(value = 0, message = "'X' and 'Y' value can not be less than 0") Integer x,
+public record PositionDTO(@Min(value = 0, message = "'X' and 'Y' value can not be less than 0") Integer x,
                           @Min(value = 0, message = "'X' and 'Y' value can not be less than 0") Integer y) {
 
     public Position toEntity() {
@@ -18,6 +17,6 @@ public record PositionDTO(Long id ,
 
     public static PositionDTO from(Position position){
 
-        return new PositionDTO(position.getId() , position.getX(), position.getY());
+        return new PositionDTO(position.getX(), position.getY());
     }
 }

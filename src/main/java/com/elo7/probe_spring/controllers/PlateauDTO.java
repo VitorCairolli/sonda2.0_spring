@@ -1,7 +1,6 @@
 package com.elo7.probe_spring.controllers;
 
 import com.elo7.probe_spring.models.Plateau;
-import com.elo7.probe_spring.models.Position;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 import javax.validation.Valid;
