@@ -2,8 +2,6 @@ package com.elo7.probe_spring.services;
 
 import com.elo7.probe_spring.exceptions.InvalidPlateauException;
 import com.elo7.probe_spring.exceptions.InvalidProbeException;
-import com.elo7.probe_spring.exceptions.ProbeCollisionException;
-import com.elo7.probe_spring.exceptions.ProbeOutOfPlateauException;
 import com.elo7.probe_spring.models.Plateau;
 import com.elo7.probe_spring.models.Position;
 import com.elo7.probe_spring.models.Probe;
@@ -37,16 +35,7 @@ public class ProbeService {
         Plateau plateau = plateauService.findById(plateauId)
                 .orElseThrow(() -> new InvalidPlateauException("Plateau not found"));
 
-        if(!plateau.isInside(newProbe))
-            throw new InvalidProbeException("Probe coordinates are not inside plateau");
-
-        for (Probe probe:plateau.getProbes()) {
-            if(newProbe.getPosition().equals(probe.getPosition())) {
-                throw new InvalidProbeException("There is already a probe in this coordinates");
-            }
-        }
-
-        newProbe.setPlateau(plateau);
+        plateau.insertProbe(newProbe);
         return repository.save(newProbe);
     }
 
@@ -54,23 +43,14 @@ public class ProbeService {
         Probe probe = repository.findById(probeId)
                 .orElseThrow(() -> new InvalidProbeException("Probe not found"));
 
-        Plateau plateau = plateauService.findById(probe.getPlateau().getId())
-                .orElseThrow(() -> new InvalidPlateauException("Plateau not found"));
-
-        HashMap<Position, Probe> hashMap = probeListToHashmap(plateau.getProbes());
-
         Probe dummy = new Probe(new Position(probe.getPosition().getX(), probe.getPosition().getY()), probe.getDirection());
 
         for(int i = 0; i < command.length(); i++) {
-            if(command.charAt(i) == 'M') {
+            if(command.charAt(i) == 'M')
                 dummy.move();
-                if (hashMap.containsKey(dummy.getPosition()))
-                    throw new ProbeCollisionException("Command causes probe to collide");
 
-                if (!plateau.isInside(dummy))
-                    throw new ProbeOutOfPlateauException("Command causes probe to leave plateau");
-            }
-            else dummy.turn(command.charAt(i));
+            else
+                dummy.turn(command.charAt(i));
         }
 
         probe.getPosition().setX(dummy.getPosition().getX());

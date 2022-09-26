@@ -1,5 +1,9 @@
 package com.elo7.probe_spring.models;
 
+import com.elo7.probe_spring.exceptions.InvalidProbeException;
+import com.elo7.probe_spring.exceptions.ProbeCollisionException;
+import com.elo7.probe_spring.exceptions.ProbeOutOfPlateauException;
+
 import javax.persistence.*;
 import java.util.*;
 
@@ -51,12 +55,43 @@ public class Plateau {
         return probes;
     }
 
-    public boolean isInside(Probe probe) {
+    private boolean isInsidePlateau(Probe probe) {
 
         return (probe.getPosition().getX() >= getMinPosition().getX() &&
                 probe.getPosition().getY() >= getMinPosition().getY() &&
                 probe.getPosition().getX() <= getMaxPosition().getX() &&
                 probe.getPosition().getY() <= getMaxPosition().getY());
+    }
+
+    public void isPositionValid(Probe probe) {
+
+        if (thereIsProbeWithPosition(probe))
+            throw new ProbeCollisionException("Command causes probe to collide");
+
+        if (isInsidePlateau(probe))
+            throw new ProbeOutOfPlateauException("Command causes probe to leave plateau");
+    }
+
+    public void insertProbe(Probe probe) {
+
+        if (isInsidePlateau(probe))
+            throw new ProbeOutOfPlateauException("Could not create probe: there is a probe in this position.");
+
+        if (thereIsProbeWithPosition(probe))
+            throw new ProbeCollisionException("Could not create probe: position outside plateau.");
+
+        probe.setPlateau(this);
+        probes.add(probe);
+    }
+
+    private boolean thereIsProbeWithPosition(Probe inputProbe) {
+        for (Probe probe:this.probes) {
+            if(probe.getPosition().equals(inputProbe.getPosition())) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     @Override
