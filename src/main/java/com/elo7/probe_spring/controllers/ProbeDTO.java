@@ -5,8 +5,10 @@ import com.elo7.probe_spring.models.Position;
 import com.elo7.probe_spring.models.Probe;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import javax.validation.Valid;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record ProbeDTO(Long id, PositionDTO position, Direction direction, Long plateauId) {
+public record ProbeDTO(Long id, @Valid PositionDTO position, Direction direction, Long plateauId) {
 
     public Probe toEntity() {
 
