@@ -7,7 +7,7 @@ import javax.validation.Valid;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record PlateauDTO(Long id, @Valid PositionDTO position, List<ProbeDTO> probes) {
+public record PlateauDTO(Long id, @Valid PositionDTO position, @Valid List<ProbeDTO> probes) {
 
     public Plateau toEntity(){
 
