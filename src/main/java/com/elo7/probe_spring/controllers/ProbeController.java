@@ -28,7 +28,7 @@ public class ProbeController {
     }
 
     @PostMapping
-    public ResponseEntity<ProbeDTO> createProbe(@RequestBody ProbeDTO inputProbeDTO) {
+    public ResponseEntity<ProbeDTO> createProbe(@RequestBody @Valid ProbeDTO inputProbeDTO) {
         var probe = service.create(inputProbeDTO.toEntity(), inputProbeDTO.getPlateauId());
 
         return ResponseEntity.ok(ProbeDTO.from(probe));

@@ -5,6 +5,8 @@ import com.elo7.probe_spring.services.PlateauService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping("/api/plateaus")
 public class PlateauController {
@@ -33,7 +35,7 @@ public class PlateauController {
     }
 
     @PostMapping
-    public ResponseEntity<PlateauDTO> createPlateau(@RequestBody PlateauDTO inputPlateauDTO) {
+    public ResponseEntity<PlateauDTO> createPlateau(@RequestBody @Valid PlateauDTO inputPlateauDTO) {
 
         var plateau = service.create(inputPlateauDTO.toEntity());
 
