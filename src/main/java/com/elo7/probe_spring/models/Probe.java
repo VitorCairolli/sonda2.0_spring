@@ -1,8 +1,5 @@
 package com.elo7.probe_spring.models;
 
-import com.elo7.probe_spring.exceptions.ProbeCollisionException;
-import com.elo7.probe_spring.exceptions.ProbeOutOfPlateauException;
-
 import javax.persistence.*;
 
 @Entity
@@ -68,9 +65,10 @@ public class Probe {
 
     public void move() {
 
-        plateau.isPositionValid(this);
         direction.move(position);
+        plateau.checkPositionValid(this);
     }
+
 
     public void turn(char side) {
 

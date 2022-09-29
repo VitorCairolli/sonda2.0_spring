@@ -5,6 +5,4 @@ import javax.validation.constraints.Pattern;
 
 public record CommandDTO(@Pattern(regexp = "[RML]+", message = "Invalid command") String command) {
 
-    @JsonCreator
-    public CommandDTO{}
 }

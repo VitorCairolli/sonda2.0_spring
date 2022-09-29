@@ -2,6 +2,7 @@ package com.elo7.probe_spring.controllers;
 
 import com.elo7.probe_spring.models.Plateau;
 
+import javax.validation.Valid;
 import java.util.List;
 
 public record OutputAllPlateauDTO (List<PlateauDTO> plateaus){
