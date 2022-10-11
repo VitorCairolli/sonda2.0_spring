@@ -1,6 +1,7 @@
 package com.elo7.probe_spring.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.elo7.probe_spring.exceptions.ProbeCollisionException;
+import com.elo7.probe_spring.exceptions.ProbeOutOfPlateauException;
 
 import javax.persistence.*;
 
@@ -9,15 +10,17 @@ import javax.persistence.*;
 public class Probe {
 
     @Id
-    @SequenceGenerator(name = "PROBE_SEQ")
-    @GeneratedValue(generator = "PROBE_SEQ")
+    @GeneratedValue
     private Long id;
 
-    @OneToOne(cascade=CascadeType.ALL)
-    @JoinColumn(name = "position_id")
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "x", column = @Column(name = "x_coordinates")),
+            @AttributeOverride(name = "y", column = @Column(name = "y_coordinates")),
+    })
     private Position position;
 
-    @Enumerated(EnumType.ORDINAL)
+    @Enumerated(EnumType.STRING)
     @Column(name="direction")
     private Direction direction;
 
@@ -28,35 +31,54 @@ public class Probe {
 
     Probe(){}
 
-    public Probe(Position position, Direction direction){
+    public Probe(Position position, Direction direction) {
+
         this.position = position;
         this.direction = direction;
     }
 
     public Long getId() {
+
         return id;
     }
 
-    @JsonIgnore
     public Plateau getPlateau() {
+
         return plateau;
     }
 
-    public void setPlateau(Plateau plateau) {this.plateau = plateau;}
+    public void setPlateau(Plateau plateau) {
 
-    public Direction getDirection() {return direction;}
+        this.plateau = plateau;
+    }
+
+    public Direction getDirection() {
+        return direction;
+    }
 
     public Position getPosition() {
+
         return position;
     }
 
-    public void setDirection(Direction direction) {this.direction = direction;}
+    public void setDirection(Direction direction) {
 
-    public void move() {
-        direction.move(position);
+        this.direction = direction;
     }
 
+    public void move() {
+
+        //this.position = direction.move(position);
+
+        direction.move(position);
+        plateau.checkPositionValid(this,
+                new ProbeCollisionException("Probe movement error: this command will cause probe collision"),
+                new ProbeOutOfPlateauException("Probe movement error: this command will cause probe to leave it's plateau"));
+    }
+
+
     public void turn(char side) {
+
         direction = direction.turn(side);
     }
 }
