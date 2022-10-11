@@ -64,19 +64,21 @@ public class Plateau {
                 probe.getPosition().getY() <= getMaxPosition().getY());
     }
 
-    public void checkPositionValid(Probe probe) {
+    public void checkPositionValid(Probe probe, ProbeCollisionException collisionException, ProbeOutOfPlateauException outOfPlateauException) {
 
         if (thereIsProbeWithPosition(probe))
-            throw new ProbeCollisionException("Command causes probe to collide");
+            throw collisionException;
 
         if (!isInsidePlateau(probe))
-            throw new ProbeOutOfPlateauException("Command causes probe to leave plateau");
+            throw outOfPlateauException;
     }
 
     public void insertProbe(Probe probe) {
 
-        checkPositionValid(probe);
-        
+        checkPositionValid(probe,
+                new ProbeCollisionException("Probe creation error: there already is a probe in this position"),
+                new ProbeOutOfPlateauException("Probe creation error: this position is outside the chosen plateau"));
+
         probe.setPlateau(this);
         probes.add(probe);
     }

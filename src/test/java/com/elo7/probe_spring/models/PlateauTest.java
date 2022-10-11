@@ -25,29 +25,43 @@ class PlateauTest {
 
     @Test
     void goodCaseIsPositionValid() {
-        plateau.checkPositionValid(probe);
+        plateau.checkPositionValid(probe,
+                new ProbeCollisionException("Probe creation error: there already is a probe in this position"),
+                new ProbeOutOfPlateauException("Probe creation error: this position is outside the chosen plateau"));
     }
 
     @Test
     void badCaseIsPositionValidOutOfPlateau() {
         probe.getPosition().setX(initialProbeX);
         probe.getPosition().setY(initialPlateauY + 1);
-        Throwable exception = assertThrows(ProbeOutOfPlateauException.class, () -> plateau.checkPositionValid(probe));
+        Throwable exception = assertThrows(ProbeOutOfPlateauException.class, () ->
+                plateau.checkPositionValid(probe,
+                new ProbeCollisionException("Probe creation error: there already is a probe in this position"),
+                new ProbeOutOfPlateauException("Probe creation error: this position is outside the chosen plateau")));
 
         probe.getPosition().setX(initialProbeX);
         probe.getPosition().setY(-1);
         probe.setDirection(Direction.S);
-        exception = assertThrows(ProbeOutOfPlateauException.class, () -> plateau.checkPositionValid(probe));
+        exception = assertThrows(ProbeOutOfPlateauException.class, () ->
+                plateau.checkPositionValid(probe,
+                new ProbeCollisionException("Probe creation error: there already is a probe in this position"),
+                new ProbeOutOfPlateauException("Probe creation error: this position is outside the chosen plateau")));
 
         probe.getPosition().setX(initialPlateauY + 1);
         probe.getPosition().setY(initialProbeY);
         probe.setDirection(Direction.E);
-        exception = assertThrows(ProbeOutOfPlateauException.class, () -> plateau.checkPositionValid(probe));
+        exception = assertThrows(ProbeOutOfPlateauException.class, () ->
+                plateau.checkPositionValid(probe,
+                new ProbeCollisionException("Probe creation error: there already is a probe in this position"),
+                new ProbeOutOfPlateauException("Probe creation error: this position is outside the chosen plateau")));
 
         probe.getPosition().setX(-1);
         probe.getPosition().setY(initialProbeY);
         probe.setDirection(Direction.W);
-        exception = assertThrows(ProbeOutOfPlateauException.class, () -> plateau.checkPositionValid(probe));
+        exception = assertThrows(ProbeOutOfPlateauException.class, () ->
+                plateau.checkPositionValid(probe,
+                new ProbeCollisionException("Probe creation error: there already is a probe in this position"),
+                new ProbeOutOfPlateauException("Probe creation error: this position is outside the chosen plateau")));
     }
 
     void badCaseIsPositionValidSamePositionAsAnotherProbe() {

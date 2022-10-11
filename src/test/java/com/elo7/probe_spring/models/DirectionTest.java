@@ -7,52 +7,62 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class DirectionTest {
 
-    private Direction direction;
-
     private int initialPositionX = 5;
     private int initialPositionY = 5;
+    private Position position;
+    private Direction subject;
 
     @BeforeEach
     private void instantiate() {
-        direction = Direction.N;
+        position = new Position(initialPositionX, initialPositionY);
     }
 
     @Test
-    void move() {
-        Position position = new Position(initialPositionX,initialPositionY);
-        direction.move(position);
+    void moveOneUnitOfMovementUp() {
+        subject = Direction.N;
+        subject.move(position);
         assertEquals(position, new Position(initialPositionX, initialPositionY + 1));
+    }
 
-        direction = Direction.S;
-        direction.move(position);
-        assertEquals(position, new Position(initialPositionX, initialPositionY));
+    @Test
+    void moveOneUnitOfMovementDown() {
+        subject = Direction.S;
+        subject.move(position);
+        assertEquals(position, new Position(initialPositionX, initialPositionY -1));
+    }
 
-        direction = Direction.E;
-        direction.move(position);
+    @Test
+    void moveOneUnitOfMovementEast() {
+        subject = Direction.E;
+        subject.move(position);
         assertEquals(position, new Position(initialPositionX + 1, initialPositionY));
+    }
 
-        direction = Direction.W;
-        direction.move(position);
-        assertEquals(position, new Position(initialPositionX, initialPositionY));
+    @Test
+    void moveOneUnitOfMovementWest() {
+        subject = Direction.W;
+        subject.move(position);
+        assertEquals(position, new Position(initialPositionX - 1, initialPositionY));
     }
 
     @Test
     void turn() {
-        direction = direction.turn('R');
-        assertEquals(direction, Direction.E);
-        direction = direction.turn('R');
-        assertEquals(direction, Direction.S);
-        direction = direction.turn('R');
-        assertEquals(direction, Direction.W);
-        direction = direction.turn('R');
-        assertEquals(direction, Direction.N);
-        direction = direction.turn('L');
-        assertEquals(direction, Direction.W);
-        direction = direction.turn('L');
-        assertEquals(direction, Direction.S);
-        direction = direction.turn('L');
-        assertEquals(direction, Direction.E);
-        direction = direction.turn('L');
-        assertEquals(direction, Direction.N);
+        subject = Direction.N;
+        subject = subject.turn('R');
+        assertEquals(subject, Direction.E);
+        subject = subject.turn('R');
+        assertEquals(subject, Direction.S);
+        subject = subject.turn('R');
+        assertEquals(subject, Direction.W);
+        subject = subject.turn('R');
+        assertEquals(subject, Direction.N);
+        subject = subject.turn('L');
+        assertEquals(subject, Direction.W);
+        subject = subject.turn('L');
+        assertEquals(subject, Direction.S);
+        subject = subject.turn('L');
+        assertEquals(subject, Direction.E);
+        subject = subject.turn('L');
+        assertEquals(subject, Direction.N);
     }
 }

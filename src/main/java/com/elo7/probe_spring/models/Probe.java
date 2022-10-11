@@ -1,5 +1,8 @@
 package com.elo7.probe_spring.models;
 
+import com.elo7.probe_spring.exceptions.ProbeCollisionException;
+import com.elo7.probe_spring.exceptions.ProbeOutOfPlateauException;
+
 import javax.persistence.*;
 
 @Entity
@@ -65,8 +68,12 @@ public class Probe {
 
     public void move() {
 
+        //this.position = direction.move(position);
+
         direction.move(position);
-        plateau.checkPositionValid(this);
+        plateau.checkPositionValid(this,
+                new ProbeCollisionException("Probe movement error: this command will cause probe collision"),
+                new ProbeOutOfPlateauException("Probe movement error: this command will cause probe to leave it's plateau"));
     }
 
 

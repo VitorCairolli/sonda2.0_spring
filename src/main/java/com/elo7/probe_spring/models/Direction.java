@@ -49,7 +49,9 @@ public enum Direction {
     W{
         @Override
         public void move(Position position) {
-            position.setX(position.getX() - 1);
+
+            position = new Position(position.getX() -1, position.getY());
+            //position.setX(position.getX() - 1);
         }
 
         @Override
