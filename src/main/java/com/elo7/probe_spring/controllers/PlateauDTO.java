@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -14,12 +15,7 @@ public record PlateauDTO(@JsonProperty("id")Long id,
                          @JsonProperty("position") @Valid PositionDTO position,
                          @JsonProperty("probes") @Valid List<ProbeDTO> probes) {
 
-    public PlateauDTO() {
-        this(null,null,null);
-    }
-
     public Plateau toEntity(){
-
         return new Plateau(position.toEntity());
     }
 

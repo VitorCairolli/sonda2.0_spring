@@ -1,109 +1,137 @@
 package com.elo7.probe_spring.models;
 
+import com.elo7.probe_spring.exceptions.InvalidProbeException;
 import com.elo7.probe_spring.exceptions.ProbeCollisionException;
 import com.elo7.probe_spring.exceptions.ProbeOutOfPlateauException;
 
 import javax.persistence.*;
+import javax.validation.constraints.NotEmpty;
 import java.util.*;
 
 @Entity
 @Table(name = "plateau")
 public class Plateau {
 
-    @Id
-    @GeneratedValue
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Transient
-    private Position minPosition;
+	@Transient
+	private Position minPosition;
 
-    @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "x", column = @Column(name = "max_x_coordinates")),
-            @AttributeOverride(name = "y", column = @Column(name = "max_y_coordinates")),
-    })
-    private Position maxPosition;
+	@Embedded
+	@AttributeOverrides({
+			@AttributeOverride(name = "x", column = @Column(name = "max_x_coordinates")),
+			@AttributeOverride(name = "y", column = @Column(name = "max_y_coordinates")),
+	})
+	private Position maxPosition;
 
-    @OneToMany(mappedBy = "plateau")
-    private List<Probe> probes;
+	@OneToMany(mappedBy = "plateauId", cascade = CascadeType.ALL)
+	private List<Probe> probes;
 
-    Plateau() {
-    }
+	Plateau() {
+	}
 
-    public Plateau(Position position) {
-        this.minPosition = new Position(0, 0);
-        this.maxPosition = position;
-        probes = new ArrayList<>();
-    }
+	public Plateau(Position position) {
+		this.minPosition = new Position(0, 0);
+		this.maxPosition = position;
+		probes = new ArrayList<>();
+	}
 
-    public Long getId() {
+	public Long getId() {
 
-        return id;
-    }
+		return id;
+	}
 
-    public Position getMinPosition() {
+	public Position getMinPosition() {
 
-        return Optional.ofNullable(minPosition).orElse(new Position(0, 0));
-    }
+		return Optional.ofNullable(minPosition).orElse(new Position(0, 0));
+	}
 
-    public Position getMaxPosition() {
+	public Position getMaxPosition() {
 
-        return maxPosition;
-    }
+		return maxPosition;
+	}
 
-    public List<Probe> getProbes() {
+	public Optional<Probe> getProbeById(Long probeId) {
+		return this.probes
+				.stream()
+				.filter(probe -> probe.getId().equals(probeId))
+				.findFirst();
+	}
 
-        return probes;
-    }
+	public List<Probe> getProbes() {
+		return probes;
+	}
 
-    private boolean isInsidePlateau(Probe probe) {
+	public Plateau moveProbe(Long probeId, @NotEmpty String command) {
+		Probe probe = getProbes()
+				.stream()
+				.filter(filteredProbe -> Objects.equals(filteredProbe.getId(), probeId))
+				.findFirst()
+				.orElseThrow(() -> new InvalidProbeException("Probe not found"));
 
-        return (probe.getPosition().getX() >= getMinPosition().getX() &&
-                probe.getPosition().getY() >= getMinPosition().getY() &&
-                probe.getPosition().getX() <= getMaxPosition().getX() &&
-                probe.getPosition().getY() <= getMaxPosition().getY());
-    }
+		for (int i = 0; i < command.length(); i++) {
+			probe = probe.handleCommand(command.charAt(i));
+			this.checkPositionValid(probe,
+					new ProbeCollisionException("Cannot move, risk collision"),
+					new ProbeOutOfPlateauException("Cannot move, it`s dangerous outside plauteu"));
+		}
 
-    public void checkPositionValid(Probe probe, ProbeCollisionException collisionException, ProbeOutOfPlateauException outOfPlateauException) {
+		return this;
+	}
 
-        if (thereIsProbeWithPosition(probe))
-            throw collisionException;
+	private boolean isInsidePlateau(Probe probe) {
 
-        if (!isInsidePlateau(probe))
-            throw outOfPlateauException;
-    }
+		return (probe.getPosition().getX() >= getMinPosition().getX() &&
+				probe.getPosition().getY() >= getMinPosition().getY() &&
+				probe.getPosition().getX() <= getMaxPosition().getX() &&
+				probe.getPosition().getY() <= getMaxPosition().getY());
+	}
 
-    public void insertProbe(Probe probe) {
+	private void checkPositionValid(Probe probe,
+									ProbeCollisionException collisionException,
+									ProbeOutOfPlateauException outOfPlateauException) {
 
-        checkPositionValid(probe,
-                new ProbeCollisionException("Probe creation error: there already is a probe in this position"),
-                new ProbeOutOfPlateauException("Probe creation error: this position is outside the chosen plateau"));
+		if (thereIsProbeWithPosition(probe))
+			throw collisionException;
 
-        probe.setPlateau(this);
-        probes.add(probe);
-    }
+		if (!isInsidePlateau(probe))
+			throw outOfPlateauException;
+	}
 
-    private boolean thereIsProbeWithPosition(Probe inputProbe) {
-        return probes
-                .stream()
-                .anyMatch((probe) -> probe.getPosition().equals(inputProbe.getPosition()));
-    }
+	public Plateau insertProbe(Probe probe) {
+		checkPositionValid(probe,
+				new ProbeCollisionException("Probe creation error: there already is a probe in this position"),
+				new ProbeOutOfPlateauException("Probe creation error: this position is outside the chosen plateau"));
 
-    @Override
-    public boolean equals(Object o) {
+		probe.setPlateauId(this.id);
+		probes.add(probe);
+		return this;
+	}
 
-        if (this == o)
-            return true;
-        if (!(o instanceof Plateau plateau))
-            return false;
+	private boolean thereIsProbeWithPosition(Probe inputProbe) {
+		return probes
+				.stream()
+				.filter(probe -> !probe.getId().equals(inputProbe.getId()))
+				.anyMatch((probe) -> probe.getPosition().equals(inputProbe.getPosition()));
+	}
 
-        return (this.id.equals(plateau.id) &&
-                this.minPosition.equals(plateau.minPosition) &&
-                this.maxPosition.equals(plateau.maxPosition));
-    }
+	@Override
+	public boolean equals(Object o) {
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(this.id, this.minPosition, this.maxPosition);
-    }
+		if (this == o)
+			return true;
+		if (!(o instanceof Plateau plateau))
+			return false;
+
+		return (this.id.equals(plateau.id) &&
+				this.minPosition.equals(plateau.minPosition) &&
+				this.maxPosition.equals(plateau.maxPosition));
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(this.id, this.minPosition, this.maxPosition);
+	}
 }

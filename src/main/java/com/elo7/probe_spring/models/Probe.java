@@ -1,84 +1,82 @@
 package com.elo7.probe_spring.models;
 
-import com.elo7.probe_spring.exceptions.ProbeCollisionException;
-import com.elo7.probe_spring.exceptions.ProbeOutOfPlateauException;
-
 import javax.persistence.*;
+import javax.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "probe")
 public class Probe {
 
-    @Id
-    @GeneratedValue
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "x", column = @Column(name = "x_coordinates")),
-            @AttributeOverride(name = "y", column = @Column(name = "y_coordinates")),
-    })
-    private Position position;
+	@Embedded
+	@AttributeOverrides({
+			@AttributeOverride(name = "x", column = @Column(name = "x_coordinates")),
+			@AttributeOverride(name = "y", column = @Column(name = "y_coordinates")),
+	})
+	private Position position;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name="direction")
-    private Direction direction;
-
-
-    @ManyToOne
-    @JoinColumn(name = "plateau_id")
-    private Plateau plateau;
-
-    Probe(){}
-
-    public Probe(Position position, Direction direction) {
-
-        this.position = position;
-        this.direction = direction;
-    }
-
-    public Long getId() {
-
-        return id;
-    }
-
-    public Plateau getPlateau() {
-
-        return plateau;
-    }
-
-    public void setPlateau(Plateau plateau) {
-
-        this.plateau = plateau;
-    }
-
-    public Direction getDirection() {
-        return direction;
-    }
-
-    public Position getPosition() {
-
-        return position;
-    }
-
-    public void setDirection(Direction direction) {
-
-        this.direction = direction;
-    }
-
-    public void move() {
-
-        //this.position = direction.move(position);
-
-        direction.move(position);
-        plateau.checkPositionValid(this,
-                new ProbeCollisionException("Probe movement error: this command will cause probe collision"),
-                new ProbeOutOfPlateauException("Probe movement error: this command will cause probe to leave it's plateau"));
-    }
+	@Enumerated(EnumType.STRING)
+	@Column(name = "direction")
+	private Direction direction;
 
 
-    public void turn(char side) {
+	@Column(name = "plateau_id")
+	@NotNull
+	private Long plateauId;
 
-        direction = direction.turn(side);
-    }
+	Probe() {
+	}
+
+	public Probe(Position position, Direction direction) {
+
+		this.position = position;
+		this.direction = direction;
+	}
+
+	public Long getId() {
+
+		return id;
+	}
+
+	public Long getPlateauId() {
+		return plateauId;
+	}
+
+	public void setPlateauId(Long plateauId) {
+		this.plateauId = plateauId;
+	}
+
+	public Direction getDirection() {
+		return direction;
+	}
+
+	public Position getPosition() {
+
+		return position;
+	}
+
+	public void setDirection(Direction direction) {
+
+		this.direction = direction;
+	}
+
+	public Probe handleCommand(char command) {
+		if (command == 'M')
+			this.position = move(position);
+		else
+			this.direction = turn(command);
+
+		return this;
+	}
+
+	private Position move(Position position) {
+		return direction.move(position);
+	}
+
+	private Direction turn(char side) {
+		return direction.turn(side);
+	}
 }
