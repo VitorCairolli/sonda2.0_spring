@@ -1,76 +1,98 @@
 package com.elo7.probe_spring.controllers;
 
+import com.elo7.probe_spring.IntegrationTest;
+import com.elo7.probe_spring.models.Plateau;
+import com.elo7.probe_spring.models.Position;
+import com.elo7.probe_spring.repositories.PlateauRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.web.ServerProperties;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
-import org.springframework.stereotype.Component;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.RequestBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
-import org.testcontainers.utility.DockerImageName;
 
 import java.io.File;
 
+import static org.hamcrest.Matchers.hasSize;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Testcontainers
-@SpringBootTest
-@ExtendWith(SpringExtension.class)
-class PlateauControllerIT {
+class PlateauControllerIT extends IntegrationTest {
+	private MockMvc mockMvc;
 
-    @Container
-    private static final MySQLContainer MY_SQL_CONTAINER =
-            new MySQLContainer(DockerImageName.parse("mysql:8.0.30"))
-                    .withDatabaseName("sonda-spring-db")
-                    .withPassword("123456")
-                    .withUsername("root");
+	@Autowired
+	private PlateauRepository repository;
+	@Autowired
+	private WebApplicationContext webApplicationContext;
 
-    private MockMvc mockMvc;
-    @Autowired
-    private WebApplicationContext webApplicationContext;
+	@Value("classpath:create-plateau.json")
+	private Resource createPlateauJson;
 
-    @Value("classpath:json")
-    private Resource resource;
+	private static final ObjectMapper jackson = new ObjectMapper();
 
-    private static final ObjectMapper jackson = new ObjectMapper();
+	@BeforeEach
+	public void setup() throws Exception {
+		this.mockMvc = MockMvcBuilders.webAppContextSetup(this.webApplicationContext).build();
+	}
 
-    @BeforeEach
-    public void setup() throws Exception {
-        this.mockMvc = MockMvcBuilders.webAppContextSetup(this.webApplicationContext).build();
-    }
+	@Test
+	void shouldCreateANewPlateau() throws Exception {
+		File json = createPlateauJson.getFile();
+		PlateauDTO plateauDTO = jackson.readValue(json, PlateauDTO.class);
+		mockMvc.perform(post("/api/plateaus")
+						.contentType(MediaType.APPLICATION_JSON)
+						.content(jackson.writeValueAsString(plateauDTO)))
+				.andDo(print())
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.probes").isEmpty())
+				.andExpect(jsonPath("$.position.y").value("5"))
+				.andExpect(jsonPath("$.position.x").value("5"));
+	}
 
-    @Test
-    void shouldPersistP() throws Exception {
-        File json = resource.getFile();
-        PlateauDTO plateauDTO = jackson.readValue(json, PlateauDTO.class);
-        mockMvc.perform(post("/api/plateaus")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(jackson.writeValueAsString(plateauDTO)))
-                .andDo(print())
-                .andExpect(status().isOk());
-    }
+	@Test
+	void shouldListAllPlateaus() throws Exception {
+		repository.save(new Plateau(new Position(5, 5)));
+		repository.save(new Plateau(new Position(5, 5)));
+		repository.save(new Plateau(new Position(5, 5)));
 
-    @DynamicPropertySource
-    public static void setProperties(DynamicPropertyRegistry registry) {
+		mockMvc.perform(get("/api/plateaus")
+						.contentType(MediaType.APPLICATION_JSON))
+				.andDo(print())
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.plateaus", hasSize(3)))
+				.andExpect(jsonPath("$.plateaus").isArray());
+	}
 
-        registry.add("spring.datasource.url", () -> MY_SQL_CONTAINER.getJdbcUrl());
-        registry.add("spring.datasource.username", () -> "root");
-        registry.add("spring.datasource.password", () -> "123456");
-    }
+
+	@Test
+	void shouldListPlateausById() throws Exception {
+		Plateau savedPlateau = repository.save(new Plateau(new Position(5, 5)));
+
+		mockMvc.perform(get("/api/plateaus/" + savedPlateau.getId())
+						.contentType(MediaType.APPLICATION_JSON))
+				.andDo(print())
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.id").value(savedPlateau.getId()))
+				.andExpect(jsonPath("$.position.x").value("5"))
+				.andExpect(jsonPath("$.position.y").value("5"));
+
+	}
+
+
+	@Test
+	void shouldReturnNotFoundWhenPlateauNonExists() throws Exception {
+		mockMvc.perform(get("/api/plateaus/1")
+						.contentType(MediaType.APPLICATION_JSON))
+				.andDo(print())
+				.andExpect(status().isNotFound());
+	}
+
+
 }

@@ -11,10 +11,6 @@ import javax.validation.constraints.Min;
 public record PositionDTO(@Min(value = 0, message = "'X' and 'Y' value can not be less than 0") @JsonProperty("x") Integer x,
                           @Min(value = 0, message = "'X' and 'Y' value can not be less than 0") @JsonProperty("y") Integer y) {
 
-    public PositionDTO() {
-        this(null, null);
-    }
-
     public Position toEntity() {
 
         return new Position(x.intValue(), y.intValue());
